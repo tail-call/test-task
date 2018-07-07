@@ -1,7 +1,30 @@
 .super-extension_message-box {
+    text-align: center;
     position: fixed;
     top: 0px;
     /* Настолько наверху, насколько возможно */
     /* <https://stackoverflow.com/a/13752838> */
     z-index: 2147483647;
+    background: #2C7873;
+    border: solid 3px #004445;
+    border-radius: 32px;
+    color: white;
+    box-shadow: black 8px 8px 50px;
+    animation: slide-down 1s;
+    margin-top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+@keyframes slide-down {
+    from { margin-top: -100%; }
+    to { margin-top: 5% };
+}
+
+#super-extension_text {
+    margin: 2em;
+    font-size: 300%;
+    text-shadow: black 3px 3px 0px;
+    font-weight: 900;
+    line-height: 1em;
 }
