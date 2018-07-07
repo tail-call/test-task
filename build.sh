@@ -5,8 +5,10 @@ function die () {
     exit 1
 }
 
-pushd reactpopup/
-npm run build || die "popup build failed"
-popd
+if [ "$1" = "r" ]; then
+    pushd reactpopup/
+    npm run build || die "popup build failed"
+    popd
+fi;
 
 cp -r reactpopup/build/* src/* build
