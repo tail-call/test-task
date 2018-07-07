@@ -4,32 +4,44 @@
 
 const SITE_LIST_URL = "http://www.softomate.net/ext/employees/list.json";
 
-// TODO: remove this
-const SITES = [
-    {
-	"name": "yandex",
-	"domain": "yandex.ru",
-	"message": "Hello %username%! My name is Yandex!"
-    },
-    {
-	"name": "google",
-	"domain": "google.ru",
-	"message": "Hello %username%! My name is Google!"
-    },
-    {
-	"name": "bing",
-	"domain": "bing.com",
-	"message": "Hello %username%! My name is Bing!"
-    }
-];
+// Функции-обёртки для chrome.storage на промисах
+
+function chromeSet(key, value) {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.set({ [key]: value }, resolve);
+    });
+}
+
+function chromeGet(key) {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get([key], resolve);
+    });
+}
+
+function refreshSitesFrom(url) {
+    return fetch(url)
+        .then(response => response.json())
+        .then(sites => {
+            // Кэшировать список сайтов в sitesList. Это необходимо,
+            // потому что callback обработчика onMessage
+            return chromeSet("sites", sites);
+        });
+}
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log(sender.tab
                 ? "from a content script:" + sender.tab.url
                 : "from the extension");
-    if (request.action === "site_list")
-    {
-        let response = { sites: SITES };
-        sendResponse({ sites: SITES });
+
+    if (request.action === "site_list") {
+        chromeGet("sites").then(sendResponse);
+        // let response = { sites: sitesList };
+        // sendResponse(response);
     }
+
+    // Чтобы sendResponse() мог работать асинхронно, нужно возвратить true.
+    // <https://developer.chrome.com/extensions/messaging#simple>
+    return true;
 });
+
+refreshSitesFrom(SITE_LIST_URL);
