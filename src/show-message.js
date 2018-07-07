@@ -37,32 +37,34 @@ async function sendMessagePromisified(arg) {
 async function showMessageAt(sites) {
     let currentHost = withoutWWW(document.location.host);
     let hostData = findByHost(currentHost, sites);
+    if (!hostData) {
+        return;
+    }
+
     let { displaysLeft } = await sendMessagePromisified({
         action: "visit",
         host: currentHost
     });
-
     if (displaysLeft <= 0) {
         return;
     }
 
-    if (hostData) {
-        // Поместить окно с сообщением на страницу и заменить в нём
-        // текст
-        let messageBox = makeMessageBox();
-        document.body.appendChild(messageBox);
-        document.getElementById("super-extension_text")
-            .appendChild(document.createTextNode(hostData.message));
-        // При клике на кнопку — закрыть окно
-        document.getElementById("super-extension_close")
-            .addEventListener("click", (ev) => {
-                chrome.runtime.sendMessage({
-                    action: "closeMessage",
-                    host: currentHost
-                });
-                document.body.removeChild(messageBox);
+    // Поместить окно с сообщением на страницу и заменить в нём
+    // текст
+    let messageBox = makeMessageBox();
+    document.body.appendChild(messageBox);
+    document.getElementById("super-extension_text")
+        .appendChild(document.createTextNode(hostData.message));
+
+    // При клике на кнопку — закрыть окно
+    document.getElementById("super-extension_close")
+        .addEventListener("click", (ev) => {
+            chrome.runtime.sendMessage({
+                action: "closeMessage",
+                host: currentHost
             });
-    }
+            document.body.removeChild(messageBox);
+        });
 }
 
 chrome.runtime.sendMessage({ action: "listSites" },
