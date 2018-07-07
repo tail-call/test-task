@@ -1,12 +1,21 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 /* global chrome */
-/* global Date */
 
-function log(tag, object) {
-    console.log(`${tag}: ${JSON.stringify(object)}`);
+function makeCurrentTabRedirecter(url) {
+    return function (event) {
+        event.preventDefault();
+        chrome.tabs.getCurrent(tab => {
+        });
+    };
+}
+
+function makeSiteListItem(site) {
+    return <a href={`https://${site.domain}/`}
+              className="App-site-list-item">
+             {site.name}
+           </a>;
 }
 
 class App extends Component {
@@ -17,9 +26,8 @@ class App extends Component {
         };
 
         chrome.runtime.sendMessage(
-            { action: "site_list" },
+            { action: "listSites" },
             response => {
-                log("RESPONSE", response);
                 this.setState({ sites: response.sites });
             }
         );
@@ -29,16 +37,14 @@ class App extends Component {
     }
 
     render() {
-        log("STATE ON RENDER", this.state);
         return (
             <div className="App">
-              <h1>Sites list</h1>
-              <ul>
-                {
-                    this.state.sites
-                        .map(site => <li>{site.name}</li>)
-                }
-              </ul>
+              <div className="App-header">
+                <h1>Список сайтов</h1>
+              </div>
+              <div className="App-site-list">
+                { this.state.sites.map(makeSiteListItem) }
+              </div>
             </div>
         );
     }
