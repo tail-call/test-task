@@ -22,8 +22,6 @@ function refreshSitesFrom(url) {
     return fetch(url)
         .then(response => response.json())
         .then(sites => {
-            // Кэшировать список сайтов в sitesList. Это необходимо,
-            // потому что callback обработчика onMessage
             return chromeSet("sites", sites);
         });
 }
@@ -35,8 +33,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     if (request.action === "site_list") {
         chromeGet("sites").then(sendResponse);
-        // let response = { sites: sitesList };
-        // sendResponse(response);
     }
 
     // Чтобы sendResponse() мог работать асинхронно, нужно возвратить true.
