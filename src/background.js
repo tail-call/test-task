@@ -36,7 +36,7 @@ function scheduleRefresh(url) {
     return chromeGet("lastRefreshed")
         .then(({ lastRefreshed }) => {
             // Предполагать, что время последнего обновления равно
-            // при первом запуске
+            // нулю при первом запуске
             console.log("lastRefreshed = " + lastRefreshed);
             let delta = Date.now() - (lastRefreshed || 0);
             if (delta >= ONE_HOUR) {
@@ -48,9 +48,18 @@ function scheduleRefresh(url) {
         });
 }
 
+// Обработчики сообщений
+const actions = {
+    "site_list": sendResponse => {
+        return chromeGet("sites").then(sendResponse);
+    },
+};
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "site_list") {
-        chromeGet("sites").then(sendResponse);
+    if (actions.hasOwnProperty(request.action)) {
+        actions[request.action](sendResponse);
+    } else {
+        throw new TypeError("неизвестное действие: " + response.action);
     }
     // Чтобы sendResponse() мог работать асинхронно, нужно возвратить true:
     // <https://developer.chrome.com/extensions/messaging#simple>
