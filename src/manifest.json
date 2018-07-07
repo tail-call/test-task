@@ -13,6 +13,13 @@
         "scripts": ["background.js"],
         "persistent": false
     },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "css": [],
+            "js": ["show-message.js"]
+        }
+    ],
     "permissions": [
         "storage"
     ]
