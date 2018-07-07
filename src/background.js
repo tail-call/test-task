@@ -6,15 +6,13 @@ const SITE_LIST_URL = "http://www.softomate.net/ext/employees/list.json";
 // Один час в миллисекундах
 const ONE_HOUR = 3600 * 1000;
 
-// Функции-обёртки для chrome.storage на промисах
-
-function chromeSet(key, value) {
+function storageSetPromisified(key, value) {
     return new Promise((resolve, reject) => {
         chrome.storage.local.set({ [key]: value }, resolve);
     });
 }
 
-function chromeGet(key) {
+function storageGetPromisified(key) {
     return new Promise((resolve, reject) => {
         chrome.storage.local.get([key], resolve);
     });
@@ -24,16 +22,16 @@ function refreshSitesFrom(url) {
     return fetch(url)
         .then(response => {
             // Сохранить временную метку
-            chromeSet("lastRefreshed", Date.now());
+            storageSetPromisified("lastRefreshed", Date.now());
             return response.json();
         })
         .then(sites => {
-            return chromeSet("sites", sites);
+            return storageSetPromisified("sites", sites);
         });
 }
 
 function scheduleRefresh(url) {
-    return chromeGet("lastRefreshed")
+    return storageGetPromisified("lastRefreshed")
         .then(({ lastRefreshed }) => {
             // Предполагать, что время последнего обновления равно
             // нулю при первом запуске
@@ -50,14 +48,44 @@ function scheduleRefresh(url) {
 
 // Обработчики сообщений
 const actions = {
-    "site_list": sendResponse => {
-        return chromeGet("sites").then(sendResponse);
+    // Возвращает { sites: [список сайтов] }
+    "listSites": (request, sender, sendResponse) => {
+        return storageGetPromisified("sites").then(sendResponse);
+    },
+
+    // Возвращает число оставшихся посещений до того, как окно с
+    // сообщением перестанет показываться в виде { displaysLeft: Number }
+    "visit": (request, sender, sendResponse) => {
+        // Число оставшихся показов сообщений записано в хранилище в
+        // виде пар { "<host>:displaysLeft": Number }
+        let key = `${request.host}:displaysLeft`;
+        return storageGetPromisified(key)
+            .then(keyValue => {
+                let value = 3;
+                if (key in keyValue) {
+                    // Значение нашлось в хранилище
+                    value = keyValue[key];
+                }
+                sendResponse({ displaysLeft: value });
+                console.log("visited " + request.host + ", VISIT returned " + value);
+                // Число оставшихся показов не может быть меньше нуля
+                return storageSetPromisified(key, Math.max(0, value - 1));
+            });
+    },
+
+    // Сигнализирует о закрытии окна с сообщением, число оставшихся
+    // показов сбрасывается до нуля
+    "closeMessage": (request, sender, sendResponse) => {
+        console.log("closed window at " + request.host);
+        let key = `${request.host}:displaysLeft`;
+        return storageSetPromisified(key, 0)
+            .then(sendResponse);
     },
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (actions.hasOwnProperty(request.action)) {
-        actions[request.action](sendResponse);
+        actions[request.action](request, sender, sendResponse);
     } else {
         throw new TypeError("неизвестное действие: " + response.action);
     }
