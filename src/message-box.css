@@ -1,0 +1,7 @@
+.super-extension_message-box {
+    position: fixed;
+    top: 0px;
+    /* Настолько наверху, насколько возможно */
+    /* <https://stackoverflow.com/a/13752838> */
+    z-index: 2147483647;
+}
