@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mkdir -p build
+
 function die () {
     echo "FATAL ERROR: $@"
     exit 1
