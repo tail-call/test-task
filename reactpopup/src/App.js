@@ -2,31 +2,34 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+/* global chrome */
+/* global Date */
+
+function log(tag, object) {
+    console.log(`${tag}: ${JSON.stringify(object)}`);
+}
+
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            // TODO: remove these
-            sites: [
-	        {
-		    "name": "yandex",
-		    "domain": "yandex.ru",
-		    "message": "Hello %username%! My name is Yandex!"
-	        },
-	        {
-		    "name": "google",
-		    "domain": "google.ru",
-		    "message": "Hello %username%! My name is Google!"
-	        },
-	        {
-		    "name": "bing",
-		    "domain": "bing.com",
-		    "message": "Hello %username%! My name is Bing!"
-	        }
-            ]
+            sites: []
         };
+
+        chrome.runtime.sendMessage(
+            { action: "site_list" },
+            response => {
+                log("RESPONSE", response);
+                this.setState({ sites: response.sites });
+            }
+        );
     }
+
+    componentDidMount() {
+    }
+
     render() {
+        log("STATE ON RENDER", this.state);
         return (
             <div className="App">
               <h1>Sites list</h1>
