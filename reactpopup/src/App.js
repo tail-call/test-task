@@ -12,10 +12,13 @@ function makeCurrentTabRedirecter(url) {
 }
 
 function makeSiteListItem(site) {
-    return <a href={`https://${site.domain}/`} target="_blank"
-              className="App-site-list-item">
+    return <div className="App-site-list-item">
              {site.name}
-           </a>;
+             <div className="App-site-message">{site.message}</div>
+             <a href={`https://${site.domain}/`} target="_blank">
+               перейти
+             </a>
+           </div>;
 }
 
 class App extends Component {

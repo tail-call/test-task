@@ -8,9 +8,32 @@
 }
 
 .App-site-list-item {
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    background: gainsboro;
+    margin: 2px;
+    padding: 0.5em;
+    border-radius: 8px;
+}
+
+.App-site-message {
+    color: rgba(0, 0, 0, 0.5);
+    max-width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.App-site-message:after {
+    content: "…";
 }
 
 .App-header {
     background: green;
+}
+
+.App-refresh-date {
+    font-size: 75%;
+    color: gray;
+    margin-top: 1em;
 }
