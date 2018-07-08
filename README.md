@@ -39,6 +39,6 @@
 
     $ ./build.sh r
 
-Если Bash под рукой нет, перейти в каталог `reactpopup/`, набрать `>
-npm run build`, скопировать куда-нибудь содержимое `reactpopup/build/`
-и туда же все файлы из `lib/` и `public/`.
+Если Bash под рукой нет, нужно перейти в каталог `reactpopup/`,
+набрать `> npm run build`, скопировать куда-нибудь содержимое
+`reactpopup/build/` и туда же все файлы из `lib/` и `public/`.
