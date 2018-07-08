@@ -13,4 +13,4 @@ if [ "$1" = "r" ]; then
     popd
 fi;
 
-cp -r reactpopup/build/* src/* build
+cp -r reactpopup/build/* lib/* public/* build
