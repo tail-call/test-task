@@ -22,13 +22,14 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            lastRefreshed: new Date(undefined),
             sites: []
         };
 
         chrome.runtime.sendMessage(
             { action: "listSites" },
             response => {
-                this.setState({ sites: response.sites });
+                this.setState(response);
             }
         );
     }
@@ -44,6 +45,11 @@ class App extends Component {
               </div>
               <div className="App-site-list">
                 { this.state.sites.map(makeSiteListItem) }
+              </div>
+              <div className="App-refresh-date">
+                Последний раз обновлено: {
+                    (new Date(this.state.lastRefreshed)).toLocaleString("ru-RU")
+                }
               </div>
             </div>
         );

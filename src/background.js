@@ -55,7 +55,7 @@ const actions = {
             await storageGetPromisified("sites"),
             await storageGetPromisified("lastRefreshed")
         );
-        sendResponse(await storageGetPromisified("sites"));
+        sendResponse(sites);
     },
 
     // Возвращает число оставшихся посещений до того, как окно с
