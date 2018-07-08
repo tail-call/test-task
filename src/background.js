@@ -21,38 +21,40 @@ function storageGetPromisified(key) {
     });
 }
 
-function refreshSitesFrom(url) {
-    return fetch(url)
-        .then(response => {
-            // Сохранить временную метку
-            storageSetPromisified("lastRefreshed", Date.now());
-            return response.json();
-        })
-        .then(sites => {
-            return storageSetPromisified("sites", sites);
-        });
+async function refreshSitesFrom(url) {
+    let response = await fetch(url);
+    // Сохранить временную метку
+    await storageSetPromisified("lastRefreshed", Date.now());
+    // Сохранить список сайтов
+    await storageSetPromisified("sites", await response.json());
 }
 
-function scheduleRefresh(url) {
-    return storageGetPromisified("lastRefreshed")
-        .then(({ lastRefreshed }) => {
-            // Предполагать, что время последнего обновления равно
-            // нулю при первом запуске
-            console.log("lastRefreshed = " + lastRefreshed);
-            let delta = Date.now() - (lastRefreshed || 0);
-            if (delta >= ONE_HOUR) {
-                console.log("refreshing site list");
-                refreshSitesFrom(url);
-            }
-            // Повторить вызов через delta миллисекунд
-            setTimeout(scheduleRefresh, delta);
-        });
+// Запускает периодический цикл обновления списка сайтов
+async function scheduleRefresh(url, period /* msecs */) {
+    let { lastRefreshed } = await storageGetPromisified("lastRefreshed");
+    if (!lastRefreshed) {
+        lastRefreshed = 0;
+    }
+
+    console.log("lastRefreshed = " + lastRefreshed);
+    let delta = Date.now() - lastRefreshed;
+    if (delta >= period) {
+        console.log("refreshing site list");
+        await refreshSitesFrom(url);
+    }
+
+    // Повторить вызов через delta миллисекунд
+    setTimeout(scheduleRefresh, delta, period);
 }
 
 // Обработчики сообщений
 const actions = {
     // Возвращает { sites: [список сайтов] }
     "listSites": async (request, sender, sendResponse) => {
+        let sites = Object.assign(
+            await storageGetPromisified("sites"),
+            await storageGetPromisified("lastRefreshed")
+        );
         sendResponse(await storageGetPromisified("sites"));
     },
 
@@ -99,4 +101,4 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 
 // При старте расширения запустить цикл обновления
-scheduleRefresh(SITE_LIST_URL);
+scheduleRefresh(SITE_LIST_URL, ONE_HOUR);
