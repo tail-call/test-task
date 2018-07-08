@@ -6,6 +6,9 @@ const SITE_LIST_URL = "http://www.softomate.net/ext/employees/list.json";
 // Один час в миллисекундах
 const ONE_HOUR = 3600 * 1000;
 
+// В visits хранится число посещений каждого сайта из списка.
+const visits = new Map();
+
 function storageSetPromisified(key, value) {
     return new Promise((resolve, reject) => {
         chrome.storage.local.set({ [key]: value }, resolve);
@@ -49,37 +52,37 @@ function scheduleRefresh(url) {
 // Обработчики сообщений
 const actions = {
     // Возвращает { sites: [список сайтов] }
-    "listSites": (request, sender, sendResponse) => {
-        return storageGetPromisified("sites").then(sendResponse);
+    "listSites": async (request, sender, sendResponse) => {
+        sendResponse(await storageGetPromisified("sites"));
     },
 
     // Возвращает число оставшихся посещений до того, как окно с
     // сообщением перестанет показываться в виде { displaysLeft: Number }
-    "visit": (request, sender, sendResponse) => {
-        // Число оставшихся показов сообщений записано в хранилище в
-        // виде пар { "<host>:displaysLeft": Number }
-        let key = `${request.host}:displaysLeft`;
-        return storageGetPromisified(key)
-            .then(keyValue => {
-                let value = 3;
-                if (key in keyValue) {
-                    // Значение нашлось в хранилище
-                    value = keyValue[key];
-                }
-                sendResponse({ displaysLeft: value });
-                console.log("visited " + request.host + ", VISIT returned " + value);
-                // Число оставшихся показов не может быть меньше нуля
-                return storageSetPromisified(key, Math.max(0, value - 1));
-            });
+    "visit": async (request, sender, sendResponse) => {
+
+        // Проверить, не было ли окно на этом сайте ранее закрыто
+        let wasClosed = (await storageGetPromisified(`${request.host}:closed`));
+        if (wasClosed[`${request.host}:closed`]) {
+            sendResponse({ displaysLeft: 0 });
+            return;
+        }
+
+        let visitsCount = 3;
+        if (visits.has(request.host)) {
+            visitsCount = visits.get(request.host);
+        }
+
+        sendResponse({ displaysLeft: visitsCount });
+
+        // Число оставшихся показов не может быть меньше нуля
+        visits.set(request.host, Math.max(0, visitsCount - 1));
     },
 
-    // Сигнализирует о закрытии окна с сообщением, число оставшихся
-    // показов сбрасывается до нуля
-    "closeMessage": (request, sender, sendResponse) => {
+    // Сигнализирует о закрытии окна с сообщением
+    "closeMessage": async (request, sender, sendResponse) => {
         console.log("closed window at " + request.host);
-        let key = `${request.host}:displaysLeft`;
-        return storageSetPromisified(key, 0)
-            .then(sendResponse);
+        await storageSetPromisified(`${request.host}:closed`, true);
+        sendResponse();
     },
 };
 
