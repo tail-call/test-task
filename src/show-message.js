@@ -5,7 +5,7 @@
 const MESSAGE_BOX_CLASS_NAME = "super-extension_message-box";
 const MESSAGE_TEMPLATE = `
 <div id="super-extension_text"></div>
-<button id="super-extension_close">Закрыть</button>
+<a id="super-extension_close" href="#">Закрыть</a>
 `;
 
 
@@ -59,6 +59,7 @@ async function showMessageAt(sites) {
     // При клике на кнопку — закрыть окно
     document.getElementById("super-extension_close")
         .addEventListener("click", (ev) => {
+            ev.preventDefault();
             chrome.runtime.sendMessage({
                 action: "closeMessage",
                 host: currentHost
