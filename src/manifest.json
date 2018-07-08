@@ -20,7 +20,8 @@
             "js": ["show-message.js"]
         },
         {
-            "matches": ["*://www.google.com/*", "*://www.google.ru/*"],
+            "matches": ["*://www.google.com/*", "*://www.google.ru/*",
+                        "*://www.bing.com/*"],
             "css": [],
             "js": ["insert-icon.js"]
         }
