@@ -99,6 +99,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
 });
 
-
 // При старте расширения запустить цикл обновления
 scheduleRefresh(SITE_LIST_URL, ONE_HOUR);
