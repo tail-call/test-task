@@ -1,4 +1,4 @@
-// Вставляет иконку расширения в результатах поиска google и bing
+// Вставляет иконки расширения в результатах поиска google и bing
 "use strict";
 
 function withoutWWW(str) {
@@ -17,7 +17,12 @@ const heuristics = {
         // Каждый результат поиска обрамлён элементом с классом .g
         return Array.from(document.querySelectorAll(".g"))
         // Извлекаем первый элемент <a> из каждого
-            .map(el => el.getElementsByTagName("a")[0]);
+            .map(el => el.getElementsByTagName("a")[0])
+        // По непонятным причинам в выдаче могут оказаться ссылки с
+        // href="mailto:...". Оставить только href="http..."
+            .filter(a => a.href.startsWith("http"))
+        // Оставить только ссылки, ссылающиеся на сайт из hosts
+            .filter(a => hosts.includes(getHostFromURL(a.href)));
     },
     "bing": hosts => {
         // Каждый результат поиска обрамлён элементом с классом
@@ -30,6 +35,7 @@ const heuristics = {
     }
 };
 
+// Выбирает эвристическую функцию для сайта с именем хоста host
 function getHeuristicFor(host) {
     if (host.match("bing")) {
         return heuristics.bing;
@@ -44,14 +50,17 @@ function makeIcon() {
     return icon;
 }
 
-function insertIcons() {
-    chrome.runtime.sendMessage({ action: "listSites" }, ({ sites }) => {
-        let heuristic = getHeuristicFor(document.location.host);
-        let nodes = heuristic(sites.map(site => site.domain));
-        for (let node of Array.from(nodes)) {
-            node.parentElement.insertBefore(makeIcon(), node);
-        }
-    });
+// Вставляет иконки рядом с ссылками на сайты из массива hosts
+// среди результатов поиска
+function insertIcons(hosts) {
+    let heuristic = getHeuristicFor(document.location.host);
+    let nodes = heuristic(hosts);
+    for (let node of nodes) {
+        node.parentElement.insertBefore(makeIcon(), node);
+    }
 }
 
-insertIcons();
+// Вставить иконки при загрузке страницы
+chrome.runtime.sendMessage({ action: "listSites" }, ({ sites }) => {
+    insertIcons(sites.map(site => site.domain));
+});
